@@ -1,0 +1,10 @@
+{
+  "name": "mint-codex-bar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Native Linux Mint Cinnamon Codex usage applet",
+  "type": "module",
+  "scripts": {
+    "fetch": "node applet/files/mintcodexbar@jaron/fetch-stats.mjs"
+  }
+}

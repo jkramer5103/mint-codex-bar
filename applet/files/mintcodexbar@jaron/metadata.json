@@ -1,0 +1,6 @@
+{
+  "uuid": "mintcodexbar@jaron",
+  "name": "Mint Codex Bar",
+  "description": "Clean Codex usage applet for Linux Mint Cinnamon",
+  "max-instances": 1
+}

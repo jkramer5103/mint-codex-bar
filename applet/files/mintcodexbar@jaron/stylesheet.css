@@ -1,0 +1,93 @@
+.mintcodexbar-content-item {
+    padding: 0;
+    spacing: 0;
+}
+
+.mintcodexbar-shell {
+    width: 420px;
+    spacing: 12px;
+    padding: 4px 0 6px 0;
+}
+
+.mintcodexbar-hero {
+    padding: 16px;
+    border-radius: 16px;
+    background-gradient-direction: vertical;
+    background-gradient-start: rgba(42, 54, 79, 0.95);
+    background-gradient-end: rgba(17, 23, 35, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.mintcodexbar-grid {
+    spacing: 10px;
+}
+
+.mintcodexbar-card {
+    padding: 14px 14px 12px 14px;
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.mintcodexbar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.62);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.mintcodexbar-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.mintcodexbar-value-small {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.mintcodexbar-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.mintcodexbar-caption {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.56);
+}
+
+.mintcodexbar-meter {
+    height: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.mintcodexbar-meter-fill-primary {
+    height: 8px;
+    border-radius: 999px;
+    background-color: #7dd3fc;
+}
+
+.mintcodexbar-meter-fill-secondary {
+    height: 8px;
+    border-radius: 999px;
+    background-color: #86efac;
+}
+
+.mintcodexbar-meter-fill-accent {
+    height: 8px;
+    border-radius: 999px;
+    background-color: #fcd34d;
+}
+
+.mintcodexbar-error {
+    padding: 14px;
+    border-radius: 14px;
+    background-color: rgba(127, 29, 29, 0.75);
+    border: 1px solid rgba(248, 113, 113, 0.45);
+}
