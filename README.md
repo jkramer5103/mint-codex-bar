@@ -24,6 +24,20 @@ No web scraping is used.
 
 ## Install
 
+Quick install from GitHub:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jkramer5103/mint-codex-bar/main/quick-install.sh | bash
+```
+
+This bootstrapper:
+
+- clones or updates the repo in `/opt/mint-codex-bar`
+- uses `sudo` automatically if `/opt` is not writable
+- runs `install.sh` after the checkout is ready
+
+Local install from an existing checkout:
+
 ```bash
 cd ~/Desktop/Programming_Stuff/mintCodexBar
 ./install.sh
@@ -40,6 +54,7 @@ The installer:
 - `applet/files/mintcodexbar@jaron/applet.js`: Cinnamon applet UI
 - `applet/files/mintcodexbar@jaron/fetch-stats.mjs`: live/local Codex stats collector
 - `applet/files/mintcodexbar@jaron/stylesheet.css`: popup styling
+- `quick-install.sh`: one-shot GitHub bootstrap installer
 - `install.sh`: local installer for Cinnamon
 
 ## Manual test
