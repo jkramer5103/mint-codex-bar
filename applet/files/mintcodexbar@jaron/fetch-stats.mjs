@@ -9,7 +9,14 @@ import { spawn } from "node:child_process";
 
 const CODEX_HOME = process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
 const SESSIONS_DIR = path.join(CODEX_HOME, "sessions");
-const MODEL_PRICING = {
+const PRICING_DOC_URL = "https://platform.openai.com/docs/llms-full.txt";
+const PRICING_FETCH_TIMEOUT_MS = 10000;
+const FALLBACK_MODEL_PRICING = {
+  "gpt-5.5": {
+    inputPerMillion: 5,
+    cachedInputPerMillion: 0.5,
+    outputPerMillion: 30,
+  },
   "gpt-5.4": {
     inputPerMillion: 2.5,
     cachedInputPerMillion: 0.25,
@@ -24,6 +31,61 @@ const MODEL_PRICING = {
     inputPerMillion: 0.2,
     cachedInputPerMillion: 0.02,
     outputPerMillion: 1.25,
+  },
+  "gpt-5.4-pro": {
+    inputPerMillion: 30,
+    cachedInputPerMillion: null,
+    outputPerMillion: 180,
+  },
+  "gpt-5.2": {
+    inputPerMillion: 1.75,
+    cachedInputPerMillion: 0.175,
+    outputPerMillion: 14,
+  },
+  "gpt-5.2-codex": {
+    inputPerMillion: 1.75,
+    cachedInputPerMillion: 0.175,
+    outputPerMillion: 14,
+  },
+  "gpt-5.2-pro": {
+    inputPerMillion: 21,
+    cachedInputPerMillion: null,
+    outputPerMillion: 168,
+  },
+  "gpt-5.1": {
+    inputPerMillion: 1.25,
+    cachedInputPerMillion: 0.125,
+    outputPerMillion: 10,
+  },
+  "gpt-5.1-codex": {
+    inputPerMillion: 1.25,
+    cachedInputPerMillion: 0.125,
+    outputPerMillion: 10,
+  },
+  "gpt-5.1-codex-max": {
+    inputPerMillion: 1.25,
+    cachedInputPerMillion: 0.125,
+    outputPerMillion: 10,
+  },
+  "gpt-5": {
+    inputPerMillion: 1.25,
+    cachedInputPerMillion: 0.125,
+    outputPerMillion: 10,
+  },
+  "gpt-5-codex": {
+    inputPerMillion: 1.25,
+    cachedInputPerMillion: 0.125,
+    outputPerMillion: 10,
+  },
+  "gpt-5-mini": {
+    inputPerMillion: 0.25,
+    cachedInputPerMillion: 0.025,
+    outputPerMillion: 2,
+  },
+  "gpt-5-nano": {
+    inputPerMillion: 0.05,
+    cachedInputPerMillion: 0.005,
+    outputPerMillion: 0.4,
   },
 };
 
@@ -303,35 +365,155 @@ async function readLatestSessionModel(filePath) {
   return latestModel;
 }
 
-function estimateApiCost(model, tokenUsage) {
+function normalizeModelName(modelName) {
+  return modelName
+    .trim()
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)\s*$/u, "");
+}
+
+function normalizePriceValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim().replace(/^["']|["']$/gu, "");
+  if (!trimmed || trimmed === "-") {
+    return null;
+  }
+
+  const parsed = Number(trimmed.replace(/[$,]/gu, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parsePricingRows(content) {
+  const pricing = {};
+  const rowPattern =
+    /\[\s*"([^"]+)"\s*,\s*([^,\]\n]+)\s*,\s*([^,\]\n]+)\s*,\s*([^,\]\n]+)\s*\]/gu;
+  let match = rowPattern.exec(content);
+
+  while (match) {
+    const model = normalizeModelName(match[1]);
+    const inputPerMillion = normalizePriceValue(match[2]);
+    const cachedInputPerMillion = normalizePriceValue(match[3]);
+    const outputPerMillion = normalizePriceValue(match[4]);
+
+    if (model && inputPerMillion !== null && outputPerMillion !== null) {
+      pricing[model] = {
+        inputPerMillion,
+        cachedInputPerMillion,
+        outputPerMillion,
+      };
+    }
+
+    match = rowPattern.exec(content);
+  }
+
+  return pricing;
+}
+
+async function fetchCurrentModelPricing() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PRICING_FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(PRICING_DOC_URL, {
+      signal: controller.signal,
+      headers: {
+        accept: "text/plain, text/markdown;q=0.9, */*;q=0.8",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`pricing fetch returned HTTP ${response.status}`);
+    }
+
+    const content = await response.text();
+    const pricing = parsePricingRows(content);
+    const count = Object.keys(pricing).length;
+
+    if (count === 0) {
+      throw new Error("pricing fetch did not contain parseable model rows");
+    }
+
+    return {
+      pricing: { ...FALLBACK_MODEL_PRICING, ...pricing },
+      source: PRICING_DOC_URL,
+      dynamic: true,
+      fetchedAt: new Date().toISOString(),
+      modelCount: count,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      pricing: { ...FALLBACK_MODEL_PRICING },
+      source: "bundled fallback",
+      dynamic: false,
+      fetchedAt: null,
+      modelCount: Object.keys(FALLBACK_MODEL_PRICING).length,
+      error: error && error.message ? error.message : "pricing fetch failed",
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function resolveModelPricing(model, pricing) {
+  if (!model) {
+    return null;
+  }
+
+  const normalizedModel = normalizeModelName(model);
+  if (pricing[normalizedModel]) {
+    return { key: normalizedModel, rates: pricing[normalizedModel] };
+  }
+
+  const sortedKeys = Object.keys(pricing).sort((a, b) => b.length - a.length);
+  for (const key of sortedKeys) {
+    if (normalizedModel.startsWith(`${key}-`)) {
+      return { key, rates: pricing[key] };
+    }
+  }
+
+  return null;
+}
+
+function estimateApiCost(model, tokenUsage, pricing) {
   if (!model || !tokenUsage) {
     return null;
   }
 
-  const rates = MODEL_PRICING[model];
-  if (!rates) {
+  const resolved = resolveModelPricing(model, pricing);
+  if (!resolved) {
     return null;
   }
 
+  const rates = resolved.rates;
   const inputTokens = Number(tokenUsage.inputTokens ?? 0);
   const cachedInputTokens = Number(tokenUsage.cachedInputTokens ?? 0);
   const outputTokens = Number(tokenUsage.outputTokens ?? 0);
   const nonCachedInputTokens = Math.max(0, inputTokens - cachedInputTokens);
+  const cachedInputRate = rates.cachedInputPerMillion ?? rates.inputPerMillion;
   const totalCost =
     (nonCachedInputTokens / 1_000_000) * rates.inputPerMillion +
-    (cachedInputTokens / 1_000_000) * rates.cachedInputPerMillion +
+    (cachedInputTokens / 1_000_000) * cachedInputRate +
     (outputTokens / 1_000_000) * rates.outputPerMillion;
 
   return {
     model,
+    pricingModel: resolved.key,
     inputPerMillion: rates.inputPerMillion,
-    cachedInputPerMillion: rates.cachedInputPerMillion,
+    cachedInputPerMillion: cachedInputRate,
     outputPerMillion: rates.outputPerMillion,
     totalUsd: totalCost,
   };
 }
 
 async function collectLocalSessionStats() {
+  const pricingInfo = await fetchCurrentModelPricing();
   const files = await listSessionFiles();
   const todayKey = midnightUtcKey(new Date());
   const recent7 = buildRecentDateSet(7);
@@ -371,6 +553,13 @@ async function collectLocalSessionStats() {
       sessionsToday: 0,
       sessionsLast7Days: 0,
       sessionsThisMonth: 0,
+      pricing: {
+        source: pricingInfo.source,
+        dynamic: pricingInfo.dynamic,
+        fetchedAt: pricingInfo.fetchedAt,
+        modelCount: pricingInfo.modelCount,
+        error: pricingInfo.error,
+      },
       monthSpend: null,
       latestSession: null,
     };
@@ -388,7 +577,7 @@ async function collectLocalSessionStats() {
         readLatestSessionModel(filePath),
         readLatestTokenUsage(filePath),
       ]);
-      return estimateApiCost(sessionModel, sessionTokenUsage);
+      return estimateApiCost(sessionModel, sessionTokenUsage, pricingInfo.pricing);
     })
   );
 
@@ -401,10 +590,20 @@ async function collectLocalSessionStats() {
     sessionsToday,
     sessionsLast7Days,
     sessionsThisMonth,
+    pricing: {
+      source: pricingInfo.source,
+      dynamic: pricingInfo.dynamic,
+      fetchedAt: pricingInfo.fetchedAt,
+      modelCount: pricingInfo.modelCount,
+      error: pricingInfo.error,
+    },
     monthSpend: {
       monthKey,
       totalUsd: monthSpendTotal,
       estimatedSessions: monthEstimates.filter(Boolean).length,
+      skippedSessions: monthFiles.length - monthEstimates.filter(Boolean).length,
+      dynamicPricing: pricingInfo.dynamic,
+      pricingSource: pricingInfo.source,
     },
     latestSession: {
       filePath: latestSession.filePath,
@@ -415,7 +614,7 @@ async function collectLocalSessionStats() {
       model,
       source: meta ? meta.source || null : null,
       tokenUsage,
-      estimatedCost: estimateApiCost(model, tokenUsage),
+      estimatedCost: estimateApiCost(model, tokenUsage, pricingInfo.pricing),
     },
   };
 }

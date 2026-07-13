@@ -425,6 +425,8 @@ class MintCodexBarApplet extends Applet.TextIconApplet {
         let email = data.account && data.account.email ? data.account.email : "not available";
         let credits = data.rateLimits && data.rateLimits.credits ? data.rateLimits.credits : null;
         let monthSpend = local.monthSpend || null;
+        let pricing = local.pricing || null;
+        let pricingLabel = pricing && pricing.dynamic ? "live pricing" : "fallback pricing";
         let primaryLeft = primary ? primary.remainingPercent : null;
         let secondaryLeft = secondary ? secondary.remainingPercent : null;
         let panelPrimary = primaryLeft === null ? "--" : primaryLeft.toString();
@@ -504,7 +506,7 @@ class MintCodexBarApplet extends Applet.TextIconApplet {
         activityRow.add(this._makeMiniCard(
             "Spend",
             monthSpend ? this._formatCurrency(monthSpend.totalUsd) : "n/a",
-            monthSpend ? this._formatMonthLabel(monthSpend.monthKey) + " API estimate" : "this month"
+            monthSpend ? this._formatMonthLabel(monthSpend.monthKey) + " API estimate, " + pricingLabel : "this month"
         ));
         this._content.add(activityRow);
 

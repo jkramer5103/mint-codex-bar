@@ -6,8 +6,7 @@ A native Linux Mint Cinnamon applet that shows Codex usage in the panel and open
 
 - Live Codex account and rate-limit data from `codex app-server`
 - Local activity data from `~/.codex/sessions`
-
-No web scraping is used.
+- Current model token pricing from OpenAI's docs export, with bundled fallback rates
 
 ## Features
 
