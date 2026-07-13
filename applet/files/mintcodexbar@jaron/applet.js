@@ -238,6 +238,35 @@ class MintCodexBarApplet extends Applet.TextIconApplet {
         return Math.max(0, 100 - windowData.usedPercent).toString() + "%";
     }
 
+    _formatWindowTitle(windowData, fallback) {
+        if (!windowData || !windowData.windowMinutes) {
+            return fallback;
+        }
+
+        let minutes = Number(windowData.windowMinutes);
+        if (minutes === 300) {
+            return "5h window";
+        }
+        if (minutes === 10080) {
+            return "Weekly window";
+        }
+        if (minutes % 1440 === 0) {
+            return (minutes / 1440).toString() + "d window";
+        }
+        if (minutes % 60 === 0) {
+            return (minutes / 60).toString() + "h window";
+        }
+        return minutes.toString() + "m window";
+    }
+
+    _hasTemporaryFiveHourRemoval(primary, secondary) {
+        return !!(
+            primary &&
+            !secondary &&
+            Number(primary.windowMinutes) >= 7 * 24 * 60
+        );
+    }
+
     _formatDurationUntil(isoTime) {
         if (!isoTime) {
             return "unknown";
@@ -400,9 +429,18 @@ class MintCodexBarApplet extends Applet.TextIconApplet {
         let secondaryLeft = secondary ? secondary.remainingPercent : null;
         let panelPrimary = primaryLeft === null ? "--" : primaryLeft.toString();
         let panelSecondary = secondaryLeft === null ? "--" : secondaryLeft.toString();
+        let temporaryFiveHourRemoval = this._hasTemporaryFiveHourRemoval(primary, secondary);
+        let panelLabel = secondary ? panelPrimary + "/" + panelSecondary : panelPrimary + "%";
+        let panelTooltip = secondary
+            ? "Codex " + panelPrimary + "% / " + panelSecondary + "% left"
+            : "Codex " + panelPrimary + "% left";
 
-        this.set_applet_label(panelPrimary + "/" + panelSecondary);
-        this.set_applet_tooltip("Codex " + panelPrimary + "% / " + panelSecondary + "% left");
+        if (temporaryFiveHourRemoval) {
+            panelTooltip += "; 5h limit temporarily removed";
+        }
+
+        this.set_applet_label(panelLabel);
+        this.set_applet_tooltip(panelTooltip);
         this._openProjectItem.actor.visible = !!(latestSession && latestSession.cwd);
 
         this._clearContent();
@@ -419,21 +457,29 @@ class MintCodexBarApplet extends Applet.TextIconApplet {
 
         let usageRow = this._makeRow();
         usageRow.add(this._makeMetricCard(
-            "5h window",
+            this._formatWindowTitle(primary, "5h window"),
             this._formatRemaining(primary),
             this._formatResetClock(primary ? primary.resetsAt : null),
             this._formatResetRemaining(primary ? primary.resetsAt : null),
             primary ? primary.remainingPercent : 0,
             "mintcodexbar-meter-fill-primary"
         ));
-        usageRow.add(this._makeMetricCard(
-            "Weekly window",
-            this._formatRemaining(secondary),
-            this._formatResetClock(secondary ? secondary.resetsAt : null),
-            this._formatResetRemaining(secondary ? secondary.resetsAt : null),
-            secondary ? secondary.remainingPercent : 0,
-            "mintcodexbar-meter-fill-secondary"
-        ));
+        if (temporaryFiveHourRemoval) {
+            usageRow.add(this._makeMiniCard(
+                "5h limit",
+                "Temporarily off",
+                "no 5h cap"
+            ));
+        } else {
+            usageRow.add(this._makeMetricCard(
+                this._formatWindowTitle(secondary, "Weekly window"),
+                this._formatRemaining(secondary),
+                this._formatResetClock(secondary ? secondary.resetsAt : null),
+                this._formatResetRemaining(secondary ? secondary.resetsAt : null),
+                secondary ? secondary.remainingPercent : 0,
+                "mintcodexbar-meter-fill-secondary"
+            ));
+        }
         this._content.add(usageRow);
 
         let statsRow = this._makeRow();

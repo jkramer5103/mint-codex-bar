@@ -86,7 +86,7 @@ if command -v dbus-send >/dev/null 2>&1; then
     /org/Cinnamon \
     org.Cinnamon.ReloadXlet \
     string:"$UUID" \
-    string:"Applet" >/dev/null 2>&1 || true
+    string:"APPLET" >/dev/null 2>&1 || true
 fi
 
 printf 'Installed %s\n' "$UUID"
