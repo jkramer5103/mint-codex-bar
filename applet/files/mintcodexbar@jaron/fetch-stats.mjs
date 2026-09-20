@@ -12,6 +12,26 @@ const SESSIONS_DIR = path.join(CODEX_HOME, "sessions");
 const PRICING_DOC_URL = "https://platform.openai.com/docs/llms-full.txt";
 const PRICING_FETCH_TIMEOUT_MS = 10000;
 const FALLBACK_MODEL_PRICING = {
+  "gpt-6-astra": {
+    inputPerMillion: 10,
+    cachedInputPerMillion: 1,
+    outputPerMillion: 50,
+  },
+  "gpt-5.6-sol": {
+    inputPerMillion: 4,
+    cachedInputPerMillion: 0.4,
+    outputPerMillion: 20,
+  },
+  "gpt-5.6-terra": {
+    inputPerMillion: 2,
+    cachedInputPerMillion: 0.2,
+    outputPerMillion: 12,
+  },
+  "gpt-5.6-luna": {
+    inputPerMillion: 0.2,
+    cachedInputPerMillion: 0.02,
+    outputPerMillion: 1.2,
+  },
   "gpt-5.5": {
     inputPerMillion: 5,
     cachedInputPerMillion: 0.5,
