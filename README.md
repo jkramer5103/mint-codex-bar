@@ -1,63 +1,36 @@
-# mintCodexBar
+# CLIProxy Bar
 
-A native Linux Mint Cinnamon applet that shows Codex usage in the panel and opens a clean stats popup on click.
+A native Linux Mint Cinnamon panel applet for CLIProxyAPI. Click the panel percentage to see each account’s remaining limits and reset countdowns in a compact account list.
 
-## What it reads
+## Connect
 
-- Live Codex account and rate-limit data from `codex app-server`
-- Local activity data from `~/.codex/sessions`
-- Current model token pricing from OpenAI's docs export, with bundled fallback rates
+1. Run `./install.sh` (existing installations keep their panel placement and applet ID).
+2. Right-click **Proxy** in the panel → **Connection settings…**.
+3. Enter your CLIProxyAPI server URL (for example `http://127.0.0.1:8317`) and **management token**, then save.
 
-## Features
+Accounts are discovered automatically and every account is always listed in the popup, colour-coded blue for OpenAI and orange for Anthropic. Refreshes run every 3 minutes; you can also refresh manually. The panel shows `5h/weekly` remaining, summed across counted accounts (e.g. 70% + 50% = `120/…`). Right-click the applet → **Account settings…** to rearrange the cards (▲/▼), hide cards from the popup (**Card**), and choose which accounts count toward the panel and the bottom total (**Total**). The two are independent, and changes apply immediately. Newly added accounts are shown and counted automatically. `!` means a counted account has no data, so the totals are partial. If one account's quota lookup fails temporarily (for example, Claude rate-limits with HTTP 429), its last known values stay visible and are marked as such.
 
-- Native Cinnamon panel applet
-- Clickable popup with:
-  - 5h usage window
-  - weekly usage window
-  - plan and account
-  - credits
-  - sessions today / 7 days
-  - month-to-date spend estimate and latest token snapshot
-- Refresh button
-- Short panel label with remaining usage
+## Quota support
 
-## Install
+- **Codex:** session, weekly, code review, additional model limits, and reported credits.
+- **Claude:** session, weekly, and model-specific utilization windows.
+- **Antigravity:** model quotas when the provider returns `models[].quotaInfo`.
+- Other auth-file providers remain listed with an explicit unsupported message. API-key account balances and provider-specific quotas beyond these adapters are not implemented.
 
-Quick install from GitHub:
+The collector uses `/v0/management/auth-files` and `/v0/management/api-call`. Provider tokens stay on CLIProxyAPI; the applet sends its token substitution marker. It does not generate model requests or consume reset credits. Source reference: [CLIProxyAPI management UI](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/tree/main/src/features/quota/providers).
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/jkramer5103/mint-codex-bar/main/quick-install.sh | bash
-```
+The URL can include a reverse-proxy path prefix or end with `/v0/management`. Remote servers must permit management access. Use HTTPS for remote connections. Management authentication failures suspend automatic retries until connection settings are saved again.
 
-This bootstrapper:
+Settings are stored at `$XDG_CONFIG_HOME/mintcodexbar/connection.json` (default `~/.config/mintcodexbar/connection.json`) with owner-only file permissions. The management token is stored locally; do not share this file.
 
-- clones or updates the repo in `/opt/mint-codex-bar`
-- uses `sudo` automatically if `/opt` is not writable
-- runs `install.sh` after the checkout is ready
+Requires Cinnamon, Node.js 18+ (20+ recommended), Python 3, and PyGObject GTK 3 (`python3-gi`, `gir1.2-gtk-3.0` on Mint).
 
-Local install from an existing checkout:
+## Development
 
 ```bash
-cd ~/Desktop/Programming_Stuff/mintCodexBar
-./install.sh
+npm test
+npm run fetch
+./reload.sh
 ```
 
-The installer:
-
-- symlinks the applet into `~/.local/share/cinnamon/applets`
-- adds it to the Cinnamon panel if it is not already enabled
-- asks Cinnamon to reload the applet
-
-## Files
-
-- `applet/files/mintcodexbar@jaron/applet.js`: Cinnamon applet UI
-- `applet/files/mintcodexbar@jaron/fetch-stats.mjs`: live/local Codex stats collector
-- `applet/files/mintcodexbar@jaron/stylesheet.css`: popup styling
-- `quick-install.sh`: one-shot GitHub bootstrap installer
-- `install.sh`: local installer for Cinnamon
-
-## Manual test
-
-```bash
-node applet/files/mintcodexbar@jaron/fetch-stats.mjs
-```
+Tests cover quota normalization, missing data, proxy request contracts, isolated failures, and authentication rejection. A real server connection requires your URL and management token.

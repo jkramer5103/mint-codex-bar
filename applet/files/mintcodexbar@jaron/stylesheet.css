@@ -1,93 +1,36 @@
-.mintcodexbar-content-item {
-    padding: 0;
-    spacing: 0;
-}
-
-.mintcodexbar-shell {
-    width: 420px;
-    spacing: 12px;
-    padding: 4px 0 6px 0;
-}
-
-.mintcodexbar-hero {
-    padding: 16px;
-    border-radius: 16px;
-    background-gradient-direction: vertical;
-    background-gradient-start: rgba(42, 54, 79, 0.95);
-    background-gradient-end: rgba(17, 23, 35, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.mintcodexbar-grid {
-    spacing: 10px;
-}
-
-.mintcodexbar-card {
-    padding: 14px 14px 12px 14px;
-    border-radius: 14px;
-    background-color: rgba(255, 255, 255, 0.055);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.mintcodexbar-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.62);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.mintcodexbar-value {
-    font-size: 26px;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.mintcodexbar-value-small {
-    font-size: 18px;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.mintcodexbar-subtitle {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.82);
-}
-
-.mintcodexbar-caption {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.56);
-}
-
-.mintcodexbar-meter {
-    height: 8px;
-    margin-top: 8px;
-    margin-bottom: 8px;
-    border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.12);
-}
-
-.mintcodexbar-meter-fill-primary {
-    height: 8px;
-    border-radius: 999px;
-    background-color: #7dd3fc;
-}
-
-.mintcodexbar-meter-fill-secondary {
-    height: 8px;
-    border-radius: 999px;
-    background-color: #86efac;
-}
-
-.mintcodexbar-meter-fill-accent {
-    height: 8px;
-    border-radius: 999px;
-    background-color: #fcd34d;
-}
-
-.mintcodexbar-error {
-    padding: 14px;
-    border-radius: 14px;
-    background-color: rgba(127, 29, 29, 0.75);
-    border: 1px solid rgba(248, 113, 113, 0.45);
-}
+.clicpbar-content-item { padding: 0; spacing: 0; }
+.clicpbar-shell { width: 468px; spacing: 8px; padding: 8px 4px 2px; }
+.cpbar-header { spacing: 12px; }
+.cpbar-heading { font-size: 16px; font-weight: bold; color: #f1f3f4; }
+.cpbar-updated { padding-top: 4px; }
+.cpbar-muted { font-size: 10px; color: #9aa1aa; }
+.cpbar-note { font-size: 10px; color: #e5ba70; }
+.cpbar-list { spacing: 6px; }
+.cpbar-account { spacing: 6px; padding: 9px 12px 9px 10px; border-radius: 8px; background-color: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-left-width: 3px; }
+.cpbar-account.openai { border-left-color: #4c9bff; }
+.cpbar-account.anthropic { border-left-color: #e8834e; }
+.cpbar-account.other { border-left-color: #8a919a; }
+.cpbar-account.excluded { background-color: rgba(255,255,255,0.01); }
+.cpbar-identity { spacing: 8px; }
+.cpbar-account-name { font-size: 12px; font-weight: bold; color: #f1f3f4; }
+.cpbar-provider { font-size: 9px; font-weight: bold; padding-top: 2px; color: #9aa1aa; }
+.cpbar-provider.openai { color: #6fb0ff; }
+.cpbar-provider.anthropic { color: #f0a070; }
+.cpbar-tag { font-size: 9px; color: #8a919a; padding-top: 2px; }
+.cpbar-windows { spacing: 16px; }
+.cpbar-window { spacing: 3px; }
+.cpbar-metric { spacing: 6px; }
+.cpbar-limit-label { font-size: 10px; color: #bdc5cd; }
+.cpbar-percent { font-size: 11px; font-weight: bold; color: #f1f3f4; }
+.cpbar-percent.warning { color: #e5ba70; }
+.cpbar-percent.critical { color: #ec8585; }
+.cpbar-track { border-radius: 3px; background-color: rgba(255,255,255,0.08); }
+.cpbar-fill { border-radius: 3px; background-color: #8a919a; }
+.cpbar-even { border-radius: 1px; background-color: #f4f4f5; }
+.cpbar-fill.openai { background-color: #4c9bff; }
+.cpbar-fill.anthropic { background-color: #e8834e; }
+.cpbar-reset { font-size: 9px; color: #8a919a; }
+.cpbar-totals { spacing: 14px; padding: 8px 12px; border-radius: 8px; background-color: rgba(255,255,255,0.06); }
+.cpbar-totals-label { font-size: 11px; color: #bdc5cd; }
+.cpbar-totals-value { font-size: 12px; font-weight: bold; color: #f1f3f4; }
+.cpbar-error { padding: 10px; color: #f1a0a0; font-size: 12px; }

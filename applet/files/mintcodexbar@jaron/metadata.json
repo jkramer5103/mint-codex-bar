@@ -1,6 +1,6 @@
 {
   "uuid": "mintcodexbar@jaron",
-  "name": "Mint Codex Bar",
-  "description": "Clean Codex usage applet for Linux Mint Cinnamon",
+  "name": "CLIProxy Bar",
+  "description": "CLIProxyAPI account quotas and reset times in your Cinnamon panel",
   "max-instances": 1
 }
