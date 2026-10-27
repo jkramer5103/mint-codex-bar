@@ -1,36 +1,67 @@
 # CLIProxy Bar
 
-A native Linux Mint Cinnamon panel applet for CLIProxyAPI. Click the panel percentage to see each account’s remaining limits and reset countdowns in a compact account list.
+A Linux Mint Cinnamon panel applet that shows the quota of every account in your [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI). It works like CodexBar, but for all your proxied Codex and Claude accounts at once.
+
+- **Panel:** `5h/weekly` remaining, summed across the accounts you count (e.g. `242/266` for four accounts).
+- **Popup:** one card per account with session and weekly bars, reset countdowns and plan. OpenAI cards are blue and Anthropic cards are orange.
+- **Even-usage marker:** the white line on each bar shows how much would be left if you used the window at a steady pace. Fill left of the line means you're burning faster than the window allows.
+- **Account settings:** rearrange cards, hide cards, and choose which accounts count toward the total. Changes apply live.
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jkramer5103/mint-codex-bar/main/quick-install.sh | bash
+```
+
+Or from a checkout: `./install.sh`. Existing installations keep their panel position. Remove with `./uninstall.sh`.
+
+Requires Cinnamon, Node.js 18+ (20+ recommended), Python 3, and PyGObject GTK 3 (`python3-gi`, `gir1.2-gtk-3.0` on Mint).
 
 ## Connect
 
-1. Run `./install.sh` (existing installations keep their panel placement and applet ID).
-2. Right-click **Proxy** in the panel → **Connection settings…**.
-3. Enter your CLIProxyAPI server URL (for example `http://127.0.0.1:8317`) and **management token**, then save.
+1. Right-click the applet → **Connection settings…**.
+2. Enter your CLIProxyAPI server URL (for example `http://127.0.0.1:8317`) and the **management key** (not an inference API key).
+3. Save. Accounts are discovered automatically.
 
-Accounts are discovered automatically and every account is always listed in the popup, colour-coded blue for OpenAI and orange for Anthropic. Refreshes run every 3 minutes; you can also refresh manually. The panel shows `5h/weekly` remaining, summed across counted accounts (e.g. 70% + 50% = `120/…`). Right-click the applet → **Account settings…** to rearrange the cards (▲/▼), hide cards from the popup (**Card**), and choose which accounts count toward the panel and the bottom total (**Total**). The two are independent, and changes apply immediately. Newly added accounts are shown and counted automatically. `!` means a counted account has no data, so the totals are partial. If one account's quota lookup fails temporarily (for example, Claude rate-limits with HTTP 429), its last known values stay visible and are marked as such.
+The URL may include a reverse-proxy path prefix or end with `/v0/management`. Remote servers must allow remote management; use HTTPS for remote connections. If the management key is rejected, automatic refreshes pause until you save the connection again.
+
+## Usage
+
+- **Left-click:** the overview popup. The bottom row shows the 5h and weekly totals across counted accounts.
+- **Right-click → Account settings…:** for each account, **▲/▼** changes its card position, **Card** shows or hides its card in the popup, and **Total** includes or excludes it from the panel and bottom totals. Card and Total are independent. New accounts are shown and counted automatically.
+- **Refresh:** every 3 minutes, or **Refresh now** in the popup.
+- **`!` in the panel:** a counted account has no data, so the totals are partial.
+- **Temporary failures:** if a provider lookup fails (for example, Claude's usage endpoint returns HTTP 429), the account keeps its last known values and says so.
 
 ## Quota support
 
-- **Codex:** session, weekly, code review, additional model limits, and reported credits.
-- **Claude:** session, weekly, and model-specific utilization windows.
+- **Codex:** session, weekly, code review, additional model limits, plan, and credits.
+- **Claude:** session, weekly, and model-specific windows.
 - **Antigravity:** model quotas when the provider returns `models[].quotaInfo`.
-- Other auth-file providers remain listed with an explicit unsupported message. API-key account balances and provider-specific quotas beyond these adapters are not implemented.
+- Other providers are listed with an "unsupported" note.
 
-The collector uses `/v0/management/auth-files` and `/v0/management/api-call`. Provider tokens stay on CLIProxyAPI; the applet sends its token substitution marker. It does not generate model requests or consume reset credits. Source reference: [CLIProxyAPI management UI](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/tree/main/src/features/quota/providers).
+The collector only calls `/v0/management/auth-files` and `/v0/management/api-call`. Provider tokens never leave CLIProxyAPI; the applet sends CLIProxyAPI's `$TOKEN$` substitution marker. It never sends model requests or uses reset credits. Provider endpoints follow the [CLIProxyAPI management UI](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/tree/main/src/features/quota/providers).
 
-The URL can include a reverse-proxy path prefix or end with `/v0/management`. Remote servers must permit management access. Use HTTPS for remote connections. Management authentication failures suspend automatic retries until connection settings are saved again.
+## Files
 
-Settings are stored at `$XDG_CONFIG_HOME/mintcodexbar/connection.json` (default `~/.config/mintcodexbar/connection.json`) with owner-only file permissions. The management token is stored locally; do not share this file.
+Settings live in `$XDG_CONFIG_HOME/mintcodexbar/` (default `~/.config/mintcodexbar/`):
 
-Requires Cinnamon, Node.js 18+ (20+ recommended), Python 3, and PyGObject GTK 3 (`python3-gi`, `gir1.2-gtk-3.0` on Mint).
+- `connection.json`: server URL and management key, owner-only permissions. Don't share it.
+- `accounts.json`: card order, hidden cards, and accounts excluded from the total.
+- `known-accounts.json`: the account list for the settings window, written by the applet.
+
+Applet source, in `applet/files/mintcodexbar@jaron/`:
+
+- `applet.js`: panel label, popup and menus.
+- `fetch-stats.mjs`: CLIProxyAPI collector and quota normalization.
+- `panelModel.js`: totals, card order and the even-usage marker, shared with the tests.
+- `accounts.py`, `connection.py`: GTK settings windows.
+- `stylesheet.css`: popup styling.
 
 ## Development
 
 ```bash
-npm test
-npm run fetch
-./reload.sh
+npm test        # collector and panel model tests
+npm run fetch   # print the collector's JSON for your configured server
+./reload.sh     # reload the applet in the running Cinnamon session
 ```
-
-Tests cover quota normalization, missing data, proxy request contracts, isolated failures, and authentication rejection. A real server connection requires your URL and management token.

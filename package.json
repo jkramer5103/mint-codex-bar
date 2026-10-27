@@ -1,8 +1,8 @@
 {
   "name": "mint-codex-bar",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "CLIProxyAPI quota monitor for Linux Mint Cinnamon",
+  "description": "Cinnamon panel applet showing quota for every CLIProxyAPI account",
   "type": "module",
   "scripts": {
     "fetch": "node applet/files/mintcodexbar@jaron/fetch-stats.mjs",
